@@ -171,6 +171,9 @@
 .mdtTableContainer .rightAlignedColumn {
   text-align: right;
 }
+.mdtTableContainer .centerAlignedColumn {
+  text-align: center;
+}
 .mdtTableContainer tr th {
   border-bottom: solid 1px #DDDDDD;
 }
