@@ -36,7 +36,7 @@
                 $log.error('row is not exists at index: '+index);
                 return;
             }
-
+            console.log("ROW:", this.storage[index].data);
             return this.storage[index].data;
         };
 
