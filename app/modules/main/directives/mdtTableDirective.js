@@ -129,6 +129,7 @@
                 alternateHeaders: '=',
                 deleteRowCallback: '&',
                 selectedRowCallback: '&',
+                rowClickAction: '&',
                 saveRowCallback: '&',
                 animateSortIcon: '=',
                 rippleEffect: '=',
@@ -156,6 +157,10 @@
                 ColumnSelectorFeature.initFeature($scope, vm);
 
                 _processData();
+
+                vm.performRowClick = function(index) {
+                  rowClickAction(vm.dataStorage.getRowData(index))
+                }
 
                 // initialization of the storage service
                 function _initTableStorage(){
@@ -215,6 +220,7 @@
             },
             link: function($scope, element, attrs, ctrl, transclude){
                 $scope.dataStorage = ctrl.dataStorage;
+                $scope.performRowClick = ctrl.performRowClick;
 
                 _injectContentIntoTemplate();
 
