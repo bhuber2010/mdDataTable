@@ -159,7 +159,7 @@
                 _processData();
 
                 vm.performRowClick = function(index) {
-                  $scope.rowClickAction({row: vm.dataStorage.getRowData(index)})
+                  $scope.rowClickAction({row: vm.dataStorage.getRowData(index), index: index})
                 }
 
                 // initialization of the storage service
