@@ -14,9 +14,16 @@
                 $scope.getNumberOfSelectedRows = _.bind(ctrl.dataStorage.getNumberOfSelectedRows, ctrl.dataStorage);
 
                 function deleteSelectedRows(){
-                    var deletedRows = ctrl.dataStorage.deleteSelectedRows();
+                    var userAnser = new Promise(function(resolve, reject) {
+                      resolve($scope.deleteRowCallback({rows: ctrl.dataStorage.getSelectedRows()}))
+                    })
 
-                    $scope.deleteRowCallback({rows: deletedRows});
+                    userAnser.then(function(answer) {
+                      console.log("User Answer:", answer);
+                      // ctrl.dataStorage.deleteSelectedRows();
+                    })
+
+
                 }
             }
         };
