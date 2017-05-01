@@ -411,6 +411,94 @@
 (function(){
     'use strict';
 
+    PaginationFeature.$inject = ['mdtPaginationHelperFactory', 'mdtAjaxPaginationHelperFactory'];
+    function PaginationFeature(mdtPaginationHelperFactory, mdtAjaxPaginationHelperFactory){
+        var service = this;
+
+        service.initFeature = initFeature;
+        service.startFeature = startFeature;
+
+        function initFeature(scope, ctrl){
+            if(!scope.mdtRowPaginator){
+                ctrl.mdtPaginationHelper = scope.mdtPaginationHelper = mdtPaginationHelperFactory
+                    .getInstance(ctrl.dataStorage, scope.paginatedRows, scope.mdtRow);
+            }else{
+                ctrl.mdtPaginationHelper = scope.mdtPaginationHelper = mdtAjaxPaginationHelperFactory.getInstance({
+                    dataStorage: ctrl.dataStorage,
+                    paginationSetting: scope.paginatedRows,
+                    mdtRowOptions: scope.mdtRow,
+                    mdtRowPaginatorFunction: scope.mdtRowPaginator,
+                    mdtRowPaginatorErrorMessage: scope.mdtRowPaginatorErrorMessage,
+                    mdtRowPaginatorNoResultsMessage: scope.mdtRowPaginatorNoResultsMessage,
+                    mdtTriggerRequest: scope.mdtTriggerRequest
+                });
+            }
+
+            scope.isPaginationEnabled = function(){
+                if(scope.paginatedRows === true ||
+                    (scope.paginatedRows && scope.paginatedRows.hasOwnProperty('isEnabled') && scope.paginatedRows.isEnabled === true)){
+                    return true;
+                }
+
+                return false;
+            };
+
+            ctrl.paginationFeature = {
+                startPaginationFeature: function() {
+                    if (scope.mdtRowPaginator) {
+                        scope.mdtPaginationHelper.fetchPage(1);
+                    }
+                }
+            };
+        }
+
+        function startFeature(ctrl){
+            ctrl.paginationFeature.startPaginationFeature();
+        }
+    }
+
+    angular
+        .module('mdDataTable')
+        .service('PaginationFeature', PaginationFeature);
+}());
+(function(){
+    'use strict';
+
+    SelectableRowsFeatureFactory.$inject = ['$timeout'];
+    function SelectableRowsFeatureFactory($timeout){
+
+        function SelectableRowsFeature(params){
+            this.$scope = params.$scope;
+            this.ctrl = params.ctrl;
+
+            this.$scope.onCheckboxChange = _.bind(this.onCheckboxChange, this);
+        }
+
+        SelectableRowsFeature.prototype.onCheckboxChange = function(){
+            var that = this;
+            // we need to push it to the event loop to make it happen last
+            // (e.g.: all the elements can be selected before we call the callback)
+            $timeout(function(){
+                that.$scope.selectedRowCallback({
+                    rows: that.ctrl.dataStorage.getSelectedRows()
+                });
+            },0);
+        };
+
+        return {
+            getInstance: function(params){
+                return new SelectableRowsFeature(params);
+            }
+        };
+    }
+
+    angular
+        .module('mdDataTable')
+        .service('SelectableRowsFeature', SelectableRowsFeatureFactory);
+}());
+(function(){
+    'use strict';
+
     TableDataStorageFactory.$inject = ['$log', '_'];
     function TableDataStorageFactory($log, _){
 
@@ -516,14 +604,7 @@
 
             _.each(this.storage, function(rowData){
                 if(rowData.optionList.selected && rowData.optionList.deleted === false){
-
-                    if(rowData.rowId){
-                        selectedRows.push(rowData.rowId);
-
-                    //Fallback when no id was specified
-                    } else{
-                        selectedRows.push(rowData.data);
-                    }
+                    selectedRows.push(rowData.data);
                 }
             });
 
@@ -846,94 +927,6 @@
 (function(){
     'use strict';
 
-    PaginationFeature.$inject = ['mdtPaginationHelperFactory', 'mdtAjaxPaginationHelperFactory'];
-    function PaginationFeature(mdtPaginationHelperFactory, mdtAjaxPaginationHelperFactory){
-        var service = this;
-
-        service.initFeature = initFeature;
-        service.startFeature = startFeature;
-
-        function initFeature(scope, ctrl){
-            if(!scope.mdtRowPaginator){
-                ctrl.mdtPaginationHelper = scope.mdtPaginationHelper = mdtPaginationHelperFactory
-                    .getInstance(ctrl.dataStorage, scope.paginatedRows, scope.mdtRow);
-            }else{
-                ctrl.mdtPaginationHelper = scope.mdtPaginationHelper = mdtAjaxPaginationHelperFactory.getInstance({
-                    dataStorage: ctrl.dataStorage,
-                    paginationSetting: scope.paginatedRows,
-                    mdtRowOptions: scope.mdtRow,
-                    mdtRowPaginatorFunction: scope.mdtRowPaginator,
-                    mdtRowPaginatorErrorMessage: scope.mdtRowPaginatorErrorMessage,
-                    mdtRowPaginatorNoResultsMessage: scope.mdtRowPaginatorNoResultsMessage,
-                    mdtTriggerRequest: scope.mdtTriggerRequest
-                });
-            }
-
-            scope.isPaginationEnabled = function(){
-                if(scope.paginatedRows === true ||
-                    (scope.paginatedRows && scope.paginatedRows.hasOwnProperty('isEnabled') && scope.paginatedRows.isEnabled === true)){
-                    return true;
-                }
-
-                return false;
-            };
-
-            ctrl.paginationFeature = {
-                startPaginationFeature: function() {
-                    if (scope.mdtRowPaginator) {
-                        scope.mdtPaginationHelper.fetchPage(1);
-                    }
-                }
-            };
-        }
-
-        function startFeature(ctrl){
-            ctrl.paginationFeature.startPaginationFeature();
-        }
-    }
-
-    angular
-        .module('mdDataTable')
-        .service('PaginationFeature', PaginationFeature);
-}());
-(function(){
-    'use strict';
-
-    SelectableRowsFeatureFactory.$inject = ['$timeout'];
-    function SelectableRowsFeatureFactory($timeout){
-
-        function SelectableRowsFeature(params){
-            this.$scope = params.$scope;
-            this.ctrl = params.ctrl;
-
-            this.$scope.onCheckboxChange = _.bind(this.onCheckboxChange, this);
-        }
-
-        SelectableRowsFeature.prototype.onCheckboxChange = function(){
-            var that = this;
-            // we need to push it to the event loop to make it happen last
-            // (e.g.: all the elements can be selected before we call the callback)
-            $timeout(function(){
-                that.$scope.selectedRowCallback({
-                    rows: that.ctrl.dataStorage.getSelectedRows()
-                });
-            },0);
-        };
-
-        return {
-            getInstance: function(params){
-                return new SelectableRowsFeature(params);
-            }
-        };
-    }
-
-    angular
-        .module('mdDataTable')
-        .service('SelectableRowsFeature', SelectableRowsFeatureFactory);
-}());
-(function(){
-    'use strict';
-
     ColumnAlignmentHelper.$inject = ['ColumnOptionProvider'];
     function ColumnAlignmentHelper(ColumnOptionProvider){
         var service = this;
@@ -998,6 +991,159 @@
         .value('PaginatorTypeProvider', PaginatorTypeProvider);
 })();
 
+(function(){
+    'use strict';
+
+    /**
+     * @ngdoc directive
+     * @name mdtCell
+     * @restrict E
+     * @requires mdtTable
+     * @requires mdtRow
+     *
+     * @description
+     * Representing a cell which should be placed inside `mdt-row` element directive.
+     *
+     * @param {boolean=} htmlContent if set to true, then html content can be placed into the content of the directive.
+     * @param {string=} editableField if set, then content can be editable.
+     *
+     *      Available modes are:
+     *
+     *      - "smallEditDialog" - A simple, one-field edit dialog on click
+     *      - "largeEditDialog" - A complex, flexible edit edit dialog on click
+     *
+     * @param {string=} editableFieldTitle if set, then it sets the title of the dialog. (only for `largeEditDialog`)
+     * @param {number=} editableFieldMaxLength if set, then it sets the maximum length of the field.
+     *
+     *
+     * @example
+     * <pre>
+     *  <mdt-table>
+     *      <mdt-header-row>
+     *          <mdt-column>Product name</mdt-column>
+     *          <mdt-column>Price</mdt-column>
+     *          <mdt-column>Details</mdt-column>
+     *      </mdt-header-row>
+     *
+     *      <mdt-row ng-repeat="product in ctrl.products">
+     *          <mdt-cell>{{product.name}}</mdt-cell>
+     *          <mdt-cell>{{product.price}}</mdt-cell>
+     *          <mdt-cell html-content="true">
+     *              <a href="productdetails/{{product.id}}">more details</a>
+     *          </mdt-cell>
+     *      </mdt-row>
+     *  </mdt-table>
+     * </pre>
+     */
+    mdtCellDirective.$inject = ['$interpolate'];
+    function mdtCellDirective($interpolate){
+        return {
+            restrict: 'E',
+            replace: true,
+            transclude: true,
+            require: '^mdtRow',
+            link: function($scope, element, attr, mdtRowCtrl, transclude){
+
+                var attributes = {
+                    htmlContent: attr.htmlContent ? attr.htmlContent : false,
+                    editableField: attr.editableField ? attr.editableField : false,
+                    editableFieldTitle: attr.editableFieldTitle ? attr.editableFieldTitle : false,
+                    editableFieldMaxLength: attr.editableFieldMaxLength ? attr.editableFieldMaxLength : false
+                };
+
+                transclude(function (clone) {
+
+                    if(attr.htmlContent){
+                        mdtRowCtrl.addToRowDataStorage(clone, attributes);
+                    }else{
+                        //TODO: better idea?
+                        var cellValue = $interpolate(clone.html())($scope.$parent);
+
+                        mdtRowCtrl.addToRowDataStorage(cellValue, attributes);
+                    }
+                });
+            }
+        };
+    }
+
+    angular
+        .module('mdDataTable')
+        .directive('mdtCell', mdtCellDirective);
+}());
+(function(){
+    'use strict';
+
+    /**
+     * @ngdoc directive
+     * @name mdtRow
+     * @restrict E
+     * @requires mdtTable
+     *
+     * @description
+     * Representing a row which should be placed inside `mdt-table` element directive.
+     *
+     * <i>Please note the following: This element has limited functionality. It cannot listen on data changes that happens outside of the
+     * component. E.g.: if you provide an ng-repeat to generate your data rows for the table, using this directive,
+     * it won't work well if this data will change. Since the way how transclusions work, it's (with my best
+     * knowledge) an impossible task to solve at the moment. If you intend to use dynamic data rows, it's still
+     * possible with using mdtRow attribute of mdtTable.</i>
+     *
+     * @param {string|integer=} tableRowId when set table will have a uniqe id. In case of deleting a row will give
+     *      back this id.
+     *
+     * @example
+     * <pre>
+     *  <mdt-table>
+     *      <mdt-header-row>
+     *          <mdt-column>Product name</mdt-column>
+     *          <mdt-column>Price</mdt-column>
+     *      </mdt-header-row>
+     *
+     *      <mdt-row
+     *          ng-repeat="product in products"
+     *          table-row-id="{{product.id}}">
+     *          <mdt-cell>{{product.name}}</mdt-cell>
+     *          <mdt-cell>{{product.price}}</mdt-cell>
+     *      </mdt-row>
+     *  </mdt-table>
+     * </pre>
+     */
+    function mdtRowDirective(){
+        return {
+            restrict: 'E',
+            transclude: true,
+            require: '^mdtTable',
+            scope: {
+                tableRowId: '='
+            },
+            controller: ['$scope', function($scope){
+                var vm = this;
+
+                vm.addToRowDataStorage = addToRowDataStorage;
+                $scope.rowDataStorage = [];
+
+                function addToRowDataStorage(value, attributes){
+                    $scope.rowDataStorage.push({value: value, attributes: attributes});
+                }
+            }],
+            link: function($scope, element, attrs, ctrl, transclude){
+                appendColumns();
+
+                ctrl.dataStorage.addRowData($scope.tableRowId, $scope.rowDataStorage);
+
+                function appendColumns(){
+                    transclude(function (clone) {
+                        element.append(clone);
+                    });
+                }
+            }
+        };
+    }
+
+    angular
+        .module('mdDataTable')
+        .directive('mdtRow', mdtRowDirective);
+}());
 (function(){
     'use strict';
 
@@ -1176,159 +1322,6 @@
     angular
         .module('mdDataTable')
         .directive('mdtHeaderRow', mdtHeaderRowDirective);
-}());
-(function(){
-    'use strict';
-
-    /**
-     * @ngdoc directive
-     * @name mdtCell
-     * @restrict E
-     * @requires mdtTable
-     * @requires mdtRow
-     *
-     * @description
-     * Representing a cell which should be placed inside `mdt-row` element directive.
-     *
-     * @param {boolean=} htmlContent if set to true, then html content can be placed into the content of the directive.
-     * @param {string=} editableField if set, then content can be editable.
-     *
-     *      Available modes are:
-     *
-     *      - "smallEditDialog" - A simple, one-field edit dialog on click
-     *      - "largeEditDialog" - A complex, flexible edit edit dialog on click
-     *
-     * @param {string=} editableFieldTitle if set, then it sets the title of the dialog. (only for `largeEditDialog`)
-     * @param {number=} editableFieldMaxLength if set, then it sets the maximum length of the field.
-     *
-     *
-     * @example
-     * <pre>
-     *  <mdt-table>
-     *      <mdt-header-row>
-     *          <mdt-column>Product name</mdt-column>
-     *          <mdt-column>Price</mdt-column>
-     *          <mdt-column>Details</mdt-column>
-     *      </mdt-header-row>
-     *
-     *      <mdt-row ng-repeat="product in ctrl.products">
-     *          <mdt-cell>{{product.name}}</mdt-cell>
-     *          <mdt-cell>{{product.price}}</mdt-cell>
-     *          <mdt-cell html-content="true">
-     *              <a href="productdetails/{{product.id}}">more details</a>
-     *          </mdt-cell>
-     *      </mdt-row>
-     *  </mdt-table>
-     * </pre>
-     */
-    mdtCellDirective.$inject = ['$interpolate'];
-    function mdtCellDirective($interpolate){
-        return {
-            restrict: 'E',
-            replace: true,
-            transclude: true,
-            require: '^mdtRow',
-            link: function($scope, element, attr, mdtRowCtrl, transclude){
-
-                var attributes = {
-                    htmlContent: attr.htmlContent ? attr.htmlContent : false,
-                    editableField: attr.editableField ? attr.editableField : false,
-                    editableFieldTitle: attr.editableFieldTitle ? attr.editableFieldTitle : false,
-                    editableFieldMaxLength: attr.editableFieldMaxLength ? attr.editableFieldMaxLength : false
-                };
-
-                transclude(function (clone) {
-
-                    if(attr.htmlContent){
-                        mdtRowCtrl.addToRowDataStorage(clone, attributes);
-                    }else{
-                        //TODO: better idea?
-                        var cellValue = $interpolate(clone.html())($scope.$parent);
-
-                        mdtRowCtrl.addToRowDataStorage(cellValue, attributes);
-                    }
-                });
-            }
-        };
-    }
-
-    angular
-        .module('mdDataTable')
-        .directive('mdtCell', mdtCellDirective);
-}());
-(function(){
-    'use strict';
-
-    /**
-     * @ngdoc directive
-     * @name mdtRow
-     * @restrict E
-     * @requires mdtTable
-     *
-     * @description
-     * Representing a row which should be placed inside `mdt-table` element directive.
-     *
-     * <i>Please note the following: This element has limited functionality. It cannot listen on data changes that happens outside of the
-     * component. E.g.: if you provide an ng-repeat to generate your data rows for the table, using this directive,
-     * it won't work well if this data will change. Since the way how transclusions work, it's (with my best
-     * knowledge) an impossible task to solve at the moment. If you intend to use dynamic data rows, it's still
-     * possible with using mdtRow attribute of mdtTable.</i>
-     *
-     * @param {string|integer=} tableRowId when set table will have a uniqe id. In case of deleting a row will give
-     *      back this id.
-     *
-     * @example
-     * <pre>
-     *  <mdt-table>
-     *      <mdt-header-row>
-     *          <mdt-column>Product name</mdt-column>
-     *          <mdt-column>Price</mdt-column>
-     *      </mdt-header-row>
-     *
-     *      <mdt-row
-     *          ng-repeat="product in products"
-     *          table-row-id="{{product.id}}">
-     *          <mdt-cell>{{product.name}}</mdt-cell>
-     *          <mdt-cell>{{product.price}}</mdt-cell>
-     *      </mdt-row>
-     *  </mdt-table>
-     * </pre>
-     */
-    function mdtRowDirective(){
-        return {
-            restrict: 'E',
-            transclude: true,
-            require: '^mdtTable',
-            scope: {
-                tableRowId: '='
-            },
-            controller: ['$scope', function($scope){
-                var vm = this;
-
-                vm.addToRowDataStorage = addToRowDataStorage;
-                $scope.rowDataStorage = [];
-
-                function addToRowDataStorage(value, attributes){
-                    $scope.rowDataStorage.push({value: value, attributes: attributes});
-                }
-            }],
-            link: function($scope, element, attrs, ctrl, transclude){
-                appendColumns();
-
-                ctrl.dataStorage.addRowData($scope.tableRowId, $scope.rowDataStorage);
-
-                function appendColumns(){
-                    transclude(function (clone) {
-                        element.append(clone);
-                    });
-                }
-            }
-        };
-    }
-
-    angular
-        .module('mdDataTable')
-        .directive('mdtRow', mdtRowDirective);
 }());
 (function(){
     'use strict';
@@ -1543,105 +1536,6 @@
 (function(){
     'use strict';
 
-    function ColumnSelectorFeature() {
-
-        var service = this;
-
-        /**
-         * This is the first entry point when we initialize the feature.
-         *
-         * The method adds feature-related variable to the passed object.
-         *
-         * @param cellDataToStore
-         */
-        service.appendHeaderCellData = function(cellDataToStore, columnSelectorFeature, isColumnExcludedFromColumnSelector, hideColumnByDefault) {
-            if(!columnSelectorFeature.isEnabled){
-                return;
-            }
-
-            cellDataToStore.columnSelectorFeature = {};
-
-            if(isColumnExcludedFromColumnSelector){
-                cellDataToStore.columnSelectorFeature.isExcluded = true;
-            }else{
-                cellDataToStore.columnSelectorFeature.isExcluded = false;
-            }
-
-            if(hideColumnByDefault){
-                cellDataToStore.columnSelectorFeature.isHidden = true;
-            }else{
-                cellDataToStore.columnSelectorFeature.isHidden = false;
-            }
-        };
-
-        /**
-         * This is the first entry point when we initialize the feature.
-         *
-         * The method adds feature-related variable to the passed object.
-         *
-         * @param cellDataToStore
-         */
-        service.initFeature = function(scope, vm) {
-            //TODO: backward compatible when there is only a string input
-            scope.columnSelectorFeature = {};
-
-            if(scope.tableCard && scope.tableCard.columnSelector){
-                scope.columnSelectorFeature.isEnabled = true;
-            }else{
-                scope.columnSelectorFeature.isEnabled = false;
-            }
-
-            vm.columnSelectorFeature = scope.columnSelectorFeature;
-        };
-
-        /**
-         * This is the second entry point when we initialize the feature.
-         *
-         * The method adds feature-related variable to the passed header rows array.
-         *
-         * @param headerRowsData
-         */
-        service.initFeatureHeaderValues = function(headerRowsData, columnSelectorFeature){
-            if(columnSelectorFeature && columnSelectorFeature.isEnabled){
-                _.each(headerRowsData, function(item){
-                    item.columnSelectorFeature.isVisible = !item.columnSelectorFeature.isHidden;
-                });
-            }
-        };
-
-        /**
-         * Set the position of the panel. It's required to attach it to the outer container
-         * of the component because otherwise some parts of the panel can became partially or fully hidden
-         * (e.g.: when table has only one row to show)
-         */
-        service.positionElement = function(element){
-            var elementToPosition = element.parent().find('.mdt-column-chooser-button');
-            var elementPosition = elementToPosition.offset();
-            var rt = ($(window).width() - (elementPosition.left + elementToPosition.outerWidth()));
-
-            var targetMetrics = {
-                top: elementPosition.top + 55,
-                right: rt
-            };
-
-            element.css('position', 'absolute');
-            element.detach().appendTo('body');
-
-            element.css({
-                top: targetMetrics.top + 'px',
-                right: targetMetrics.right + 'px',
-                position:'absolute'
-            });
-        }
-    }
-
-    angular
-        .module('mdDataTable')
-        .service('ColumnSelectorFeature', ColumnSelectorFeature);
-}());
-(function(){
-    'use strict';
-
     ColumnFilterFeature.$inject = ['ColumnSortFeature', 'PaginatorTypeProvider'];
     function ColumnFilterFeature(ColumnSortFeature, PaginatorTypeProvider){
 
@@ -1803,6 +1697,105 @@
     angular
         .module('mdDataTable')
         .service('ColumnFilterFeature', ColumnFilterFeature);
+}());
+(function(){
+    'use strict';
+
+    function ColumnSelectorFeature() {
+
+        var service = this;
+
+        /**
+         * This is the first entry point when we initialize the feature.
+         *
+         * The method adds feature-related variable to the passed object.
+         *
+         * @param cellDataToStore
+         */
+        service.appendHeaderCellData = function(cellDataToStore, columnSelectorFeature, isColumnExcludedFromColumnSelector, hideColumnByDefault) {
+            if(!columnSelectorFeature.isEnabled){
+                return;
+            }
+
+            cellDataToStore.columnSelectorFeature = {};
+
+            if(isColumnExcludedFromColumnSelector){
+                cellDataToStore.columnSelectorFeature.isExcluded = true;
+            }else{
+                cellDataToStore.columnSelectorFeature.isExcluded = false;
+            }
+
+            if(hideColumnByDefault){
+                cellDataToStore.columnSelectorFeature.isHidden = true;
+            }else{
+                cellDataToStore.columnSelectorFeature.isHidden = false;
+            }
+        };
+
+        /**
+         * This is the first entry point when we initialize the feature.
+         *
+         * The method adds feature-related variable to the passed object.
+         *
+         * @param cellDataToStore
+         */
+        service.initFeature = function(scope, vm) {
+            //TODO: backward compatible when there is only a string input
+            scope.columnSelectorFeature = {};
+
+            if(scope.tableCard && scope.tableCard.columnSelector){
+                scope.columnSelectorFeature.isEnabled = true;
+            }else{
+                scope.columnSelectorFeature.isEnabled = false;
+            }
+
+            vm.columnSelectorFeature = scope.columnSelectorFeature;
+        };
+
+        /**
+         * This is the second entry point when we initialize the feature.
+         *
+         * The method adds feature-related variable to the passed header rows array.
+         *
+         * @param headerRowsData
+         */
+        service.initFeatureHeaderValues = function(headerRowsData, columnSelectorFeature){
+            if(columnSelectorFeature && columnSelectorFeature.isEnabled){
+                _.each(headerRowsData, function(item){
+                    item.columnSelectorFeature.isVisible = !item.columnSelectorFeature.isHidden;
+                });
+            }
+        };
+
+        /**
+         * Set the position of the panel. It's required to attach it to the outer container
+         * of the component because otherwise some parts of the panel can became partially or fully hidden
+         * (e.g.: when table has only one row to show)
+         */
+        service.positionElement = function(element){
+            var elementToPosition = element.parent().find('.mdt-column-chooser-button');
+            var elementPosition = elementToPosition.offset();
+            var rt = ($(window).width() - (elementPosition.left + elementToPosition.outerWidth()));
+
+            var targetMetrics = {
+                top: elementPosition.top + 55,
+                right: rt
+            };
+
+            element.css('position', 'absolute');
+            element.detach().appendTo('body');
+
+            element.css({
+                top: targetMetrics.top + 'px',
+                right: targetMetrics.right + 'px',
+                position:'absolute'
+            });
+        }
+    }
+
+    angular
+        .module('mdDataTable')
+        .service('ColumnSelectorFeature', ColumnSelectorFeature);
 }());
 (function(){
     'use strict';
@@ -2047,149 +2040,6 @@
 (function() {
     'use strict';
 
-    mdtColumnSelectorDirective.$inject = ['ColumnSelectorFeature', 'ColumnFilterFeature', 'PaginatorTypeProvider'];
-    function mdtColumnSelectorDirective(ColumnSelectorFeature, ColumnFilterFeature, PaginatorTypeProvider){
-        return{
-            restrict: 'E',
-            templateUrl: '/main/templates/mdtColumnSelector.html',
-            scope: true,
-            link: function($scope, element){
-                ColumnSelectorFeature.positionElement(element);
-
-                $scope.headerRowsData = _.map($scope.dataStorage.header, function(item){
-                    //excluded content should also be in, since we use the index of the array to apply the changes. Do not exclude them.
-
-                    return {
-                        columnName: item.columnName,
-                        isVisible: item.columnSelectorFeature.isVisible,
-                        isExcluded: item.columnSelectorFeature.isExcluded
-                    };
-                });
-
-                //destroying scope doesn't remove element, since it belongs to the body directly
-                $scope.$on('$destroy', function(){
-                    element.remove();
-                });
-
-                $scope.checked = function (item) {
-                    return item.isVisible;
-                };
-
-                $scope.toggle = function (item) {
-                    item.isVisible = !item.isVisible;
-                };
-
-                $scope.selectAll = function($event){
-                    $event.preventDefault();
-
-                    _.each($scope.headerRowsData, function(item){
-                        if(item.isExcluded){
-                            return;
-                        }
-
-                        item.isVisible = true;
-                    });
-                };
-
-                $scope.clearAll = function($event){
-                    $event.preventDefault();
-
-                    _.each($scope.headerRowsData, function(item){
-                        if(item.isExcluded){
-                            return;
-                        }
-
-                        item.isVisible = false;
-                    });
-                };
-
-                $scope.isAllSelected = function(){
-                    var result = _.find($scope.headerRowsData, function(item){
-                        if(item.isExcluded){
-                            return false;
-                        }
-
-                        return item.isVisible === false;
-                    });
-
-                    return result ? false : true;
-                };
-
-                $scope.isNothingSelected = function(){
-                    var result = _.find($scope.headerRowsData, function(item){
-                        if(item.isExcluded){
-                            return false;
-                        }
-
-                        return item.isVisible === true;
-                    });
-
-                    return result ? false : true;
-                };
-
-                $scope.confirmCallback = function(params){
-                    var paginator = params.paginator;
-                    var isAnyResetHappened = false;
-
-                    _.each($scope.dataStorage.header, function(item, index){
-                        item.columnSelectorFeature.isVisible = $scope.headerRowsData[index].isVisible;
-
-                        if(!item.columnSelectorFeature.isVisible){
-                            var result = ColumnFilterFeature.resetFiltersForColumn($scope.dataStorage, index);
-
-                            if(result){
-                                isAnyResetHappened = true;
-                            }
-                        }
-                    });
-
-                    $scope.columnSelectorFeature.isActive = false;
-
-                    if(isAnyResetHappened){
-                        if(paginator.paginatorType === PaginatorTypeProvider.AJAX){
-                            paginator.getFirstPage();
-                        }else{
-                            // no support for non-ajax yet
-                        }
-                    }
-                };
-
-                $scope.cancelCallback = function(){
-                    $scope.columnSelectorFeature.isActive = false;
-                };
-            }
-        }
-    }
-
-    angular
-        .module('mdDataTable')
-        .directive('mdtColumnSelector', mdtColumnSelectorDirective);
-})();
-(function(){
-    'use strict';
-
-    mdtSortingIconsDirective.$inject = ['ColumnSortDirectionProvider'];
-    function mdtSortingIconsDirective(ColumnSortDirectionProvider){
-        return {
-            restrict: 'E',
-            templateUrl: '/main/templates/cells/generateSortingIcons.html',
-            scope: {
-                data: '=',
-                size: '@'
-            },
-            link: function($scope){
-                $scope.ColumnSortDirectionProvider = ColumnSortDirectionProvider;
-            }
-        };
-    }
-
-    angular
-        .module('mdDataTable')
-        .directive('mdtSortingIcons', mdtSortingIconsDirective);
-}());
-(function() {
-    'use strict';
-
     mdtCheckboxColumnFilterDirective.$inject = ['_', 'ColumnFilterFeature', 'ColumnSortFeature', 'ColumnSortDirectionProvider'];
     function mdtCheckboxColumnFilterDirective(_, ColumnFilterFeature, ColumnSortFeature, ColumnSortDirectionProvider){
         return{
@@ -2401,6 +2251,149 @@
         .module('mdDataTable')
         .directive('mdtDropdownColumnFilter', mdtDropdownColumnFilterDirective);
 })();
+(function() {
+    'use strict';
+
+    mdtColumnSelectorDirective.$inject = ['ColumnSelectorFeature', 'ColumnFilterFeature', 'PaginatorTypeProvider'];
+    function mdtColumnSelectorDirective(ColumnSelectorFeature, ColumnFilterFeature, PaginatorTypeProvider){
+        return{
+            restrict: 'E',
+            templateUrl: '/main/templates/mdtColumnSelector.html',
+            scope: true,
+            link: function($scope, element){
+                ColumnSelectorFeature.positionElement(element);
+
+                $scope.headerRowsData = _.map($scope.dataStorage.header, function(item){
+                    //excluded content should also be in, since we use the index of the array to apply the changes. Do not exclude them.
+
+                    return {
+                        columnName: item.columnName,
+                        isVisible: item.columnSelectorFeature.isVisible,
+                        isExcluded: item.columnSelectorFeature.isExcluded
+                    };
+                });
+
+                //destroying scope doesn't remove element, since it belongs to the body directly
+                $scope.$on('$destroy', function(){
+                    element.remove();
+                });
+
+                $scope.checked = function (item) {
+                    return item.isVisible;
+                };
+
+                $scope.toggle = function (item) {
+                    item.isVisible = !item.isVisible;
+                };
+
+                $scope.selectAll = function($event){
+                    $event.preventDefault();
+
+                    _.each($scope.headerRowsData, function(item){
+                        if(item.isExcluded){
+                            return;
+                        }
+
+                        item.isVisible = true;
+                    });
+                };
+
+                $scope.clearAll = function($event){
+                    $event.preventDefault();
+
+                    _.each($scope.headerRowsData, function(item){
+                        if(item.isExcluded){
+                            return;
+                        }
+
+                        item.isVisible = false;
+                    });
+                };
+
+                $scope.isAllSelected = function(){
+                    var result = _.find($scope.headerRowsData, function(item){
+                        if(item.isExcluded){
+                            return false;
+                        }
+
+                        return item.isVisible === false;
+                    });
+
+                    return result ? false : true;
+                };
+
+                $scope.isNothingSelected = function(){
+                    var result = _.find($scope.headerRowsData, function(item){
+                        if(item.isExcluded){
+                            return false;
+                        }
+
+                        return item.isVisible === true;
+                    });
+
+                    return result ? false : true;
+                };
+
+                $scope.confirmCallback = function(params){
+                    var paginator = params.paginator;
+                    var isAnyResetHappened = false;
+
+                    _.each($scope.dataStorage.header, function(item, index){
+                        item.columnSelectorFeature.isVisible = $scope.headerRowsData[index].isVisible;
+
+                        if(!item.columnSelectorFeature.isVisible){
+                            var result = ColumnFilterFeature.resetFiltersForColumn($scope.dataStorage, index);
+
+                            if(result){
+                                isAnyResetHappened = true;
+                            }
+                        }
+                    });
+
+                    $scope.columnSelectorFeature.isActive = false;
+
+                    if(isAnyResetHappened){
+                        if(paginator.paginatorType === PaginatorTypeProvider.AJAX){
+                            paginator.getFirstPage();
+                        }else{
+                            // no support for non-ajax yet
+                        }
+                    }
+                };
+
+                $scope.cancelCallback = function(){
+                    $scope.columnSelectorFeature.isActive = false;
+                };
+            }
+        }
+    }
+
+    angular
+        .module('mdDataTable')
+        .directive('mdtColumnSelector', mdtColumnSelectorDirective);
+})();
+(function(){
+    'use strict';
+
+    mdtSortingIconsDirective.$inject = ['ColumnSortDirectionProvider'];
+    function mdtSortingIconsDirective(ColumnSortDirectionProvider){
+        return {
+            restrict: 'E',
+            templateUrl: '/main/templates/cells/generateSortingIcons.html',
+            scope: {
+                data: '=',
+                size: '@'
+            },
+            link: function($scope){
+                $scope.ColumnSortDirectionProvider = ColumnSortDirectionProvider;
+            }
+        };
+    }
+
+    angular
+        .module('mdDataTable')
+        .directive('mdtSortingIcons', mdtSortingIconsDirective);
+}());
 (function(){
     'use strict';
 
