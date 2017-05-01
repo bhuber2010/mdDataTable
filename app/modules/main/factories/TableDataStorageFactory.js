@@ -105,7 +105,7 @@
 
             _.each(this.storage, function(rowData){
                 if(rowData.optionList.selected && rowData.optionList.deleted === false){
-                    selectedRows.push(rowData.data);
+                    selectedRows.push(rowData);
                 }
             });
 
