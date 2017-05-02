@@ -128,6 +128,7 @@
                 selectableRows: '=',
                 alternateHeaders: '=',
                 deleteRowCallback: '&',
+                editRowCallback: '&',
                 selectedRowCallback: '&',
                 rowClickAction: '&',
                 saveRowCallback: '&',
