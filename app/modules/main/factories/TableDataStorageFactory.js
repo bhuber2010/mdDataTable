@@ -89,7 +89,7 @@
                         deletedRows.push(rowData.rowId);
 
                     //Fallback when no id was specified
-                    } else{
+                    } else {
                         deletedRows.push(rowData.data);
                     }
 
@@ -105,7 +105,13 @@
 
             _.each(this.storage, function(rowData){
                 if(rowData.optionList.selected && rowData.optionList.deleted === false){
-                    selectedRows.push(rowData);
+                    if(rowData.rowId){
+                        selectedRows.push(rowData.rowId);
+
+                    //Fallback when no id was specified
+                    } else {
+                        selectedRows.push(rowData.data);
+                    }
                 }
             });
 
