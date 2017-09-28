@@ -157,7 +157,7 @@
   color: #212121;
 }
 .mdtTableContainer td:first-child, .mdtTableContainer th:first-child {
-  padding: 0 0 0 24px;
+  padding: 0 6px 0 24px;
 }
 .mdtTableContainer td:last-child, .mdtTableContainer th:last-child {
   padding-right: 24px;
