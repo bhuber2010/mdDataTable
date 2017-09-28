@@ -46,6 +46,42 @@
 (function(){
     'use strict';
 
+    InlineEditModalCtrl.$inject = ['$scope', 'position', 'cellData', 'mdtTranslations', '$timeout', '$mdDialog'];
+    function InlineEditModalCtrl($scope, position, cellData, mdtTranslations, $timeout, $mdDialog){
+
+        $timeout(function() {
+            var el = $('md-dialog');
+            el.css('position', 'fixed');
+            el.css('top', position['top']);
+            el.css('left', position['left']);
+
+            el.find('input[type="text"]').focus();
+        });
+
+        $scope.cellData = cellData;
+        $scope.mdtTranslations = mdtTranslations;
+
+        $scope.saveRow = saveRow;
+        $scope.cancel = cancel;
+
+        function saveRow(){
+            if($scope.editFieldForm.$valid){
+                $mdDialog.hide(cellData.value);
+            }
+        }
+
+        function cancel(){
+            $mdDialog.cancel();
+        }
+    }
+
+    angular
+        .module('mdDataTable')
+        .controller('InlineEditModalCtrl', InlineEditModalCtrl);
+}());
+(function(){
+    'use strict';
+
     mdtAlternateHeadersDirective.$inject = ['_'];
     function mdtAlternateHeadersDirective(_){
         return {
@@ -384,42 +420,6 @@
         .directive('mdtTable', mdtTableDirective);
 }());
 
-(function(){
-    'use strict';
-
-    InlineEditModalCtrl.$inject = ['$scope', 'position', 'cellData', 'mdtTranslations', '$timeout', '$mdDialog'];
-    function InlineEditModalCtrl($scope, position, cellData, mdtTranslations, $timeout, $mdDialog){
-
-        $timeout(function() {
-            var el = $('md-dialog');
-            el.css('position', 'fixed');
-            el.css('top', position['top']);
-            el.css('left', position['left']);
-
-            el.find('input[type="text"]').focus();
-        });
-
-        $scope.cellData = cellData;
-        $scope.mdtTranslations = mdtTranslations;
-
-        $scope.saveRow = saveRow;
-        $scope.cancel = cancel;
-
-        function saveRow(){
-            if($scope.editFieldForm.$valid){
-                $mdDialog.hide(cellData.value);
-            }
-        }
-
-        function cancel(){
-            $mdDialog.cancel();
-        }
-    }
-
-    angular
-        .module('mdDataTable')
-        .controller('InlineEditModalCtrl', InlineEditModalCtrl);
-}());
 (function(){
     'use strict';
 
@@ -857,32 +857,6 @@
 (function(){
     'use strict';
 
-    ColumnAlignmentHelper.$inject = ['ColumnOptionProvider'];
-    function ColumnAlignmentHelper(ColumnOptionProvider){
-        var service = this;
-        service.getColumnAlignClass = getColumnAlignClass;
-
-        function getColumnAlignClass(alignRule) {
-          switch (alignRule) {
-              case ColumnOptionProvider.ALIGN_RULE.ALIGN_RIGHT:
-                  return 'rightAlignedColumn';
-              case ColumnOptionProvider.ALIGN_RULE.ALIGN_CENTER:
-                  return 'centerAlignedColumn';
-              case ColumnOptionProvider.ALIGN_RULE.ALIGN_LEFT:
-              default:
-                  return 'leftAlignedColumn';
-          }
-        }
-    }
-
-    angular
-        .module('mdDataTable')
-        .service('ColumnAlignmentHelper', ColumnAlignmentHelper);
-}());
-
-(function(){
-    'use strict';
-
     PaginationFeature.$inject = ['mdtPaginationHelperFactory', 'mdtAjaxPaginationHelperFactory'];
     function PaginationFeature(mdtPaginationHelperFactory, mdtAjaxPaginationHelperFactory){
         var service = this;
@@ -968,6 +942,32 @@
         .module('mdDataTable')
         .service('SelectableRowsFeature', SelectableRowsFeatureFactory);
 }());
+(function(){
+    'use strict';
+
+    ColumnAlignmentHelper.$inject = ['ColumnOptionProvider'];
+    function ColumnAlignmentHelper(ColumnOptionProvider){
+        var service = this;
+        service.getColumnAlignClass = getColumnAlignClass;
+
+        function getColumnAlignClass(alignRule) {
+          switch (alignRule) {
+              case ColumnOptionProvider.ALIGN_RULE.ALIGN_RIGHT:
+                  return 'rightAlignedColumn';
+              case ColumnOptionProvider.ALIGN_RULE.ALIGN_CENTER:
+                  return 'centerAlignedColumn';
+              case ColumnOptionProvider.ALIGN_RULE.ALIGN_LEFT:
+              default:
+                  return 'leftAlignedColumn';
+          }
+        }
+    }
+
+    angular
+        .module('mdDataTable')
+        .service('ColumnAlignmentHelper', ColumnAlignmentHelper);
+}());
+
 (function(){
     'use strict';
 
@@ -1721,161 +1721,6 @@
 (function(){
     'use strict';
 
-    function ColumnSelectorFeature() {
-
-        var service = this;
-
-        /**
-         * This is the first entry point when we initialize the feature.
-         *
-         * The method adds feature-related variable to the passed object.
-         *
-         * @param cellDataToStore
-         */
-        service.appendHeaderCellData = function(cellDataToStore, columnSelectorFeature, isColumnExcludedFromColumnSelector, hideColumnByDefault) {
-            if(!columnSelectorFeature.isEnabled){
-                return;
-            }
-
-            cellDataToStore.columnSelectorFeature = {};
-
-            if(isColumnExcludedFromColumnSelector){
-                cellDataToStore.columnSelectorFeature.isExcluded = true;
-            }else{
-                cellDataToStore.columnSelectorFeature.isExcluded = false;
-            }
-
-            if(hideColumnByDefault){
-                cellDataToStore.columnSelectorFeature.isHidden = true;
-            }else{
-                cellDataToStore.columnSelectorFeature.isHidden = false;
-            }
-        };
-
-        /**
-         * This is the first entry point when we initialize the feature.
-         *
-         * The method adds feature-related variable to the passed object.
-         *
-         * @param cellDataToStore
-         */
-        service.initFeature = function(scope, vm) {
-            //TODO: backward compatible when there is only a string input
-            scope.columnSelectorFeature = {};
-
-            if(scope.tableCard && scope.tableCard.columnSelector){
-                scope.columnSelectorFeature.isEnabled = true;
-            }else{
-                scope.columnSelectorFeature.isEnabled = false;
-            }
-
-            vm.columnSelectorFeature = scope.columnSelectorFeature;
-        };
-
-        /**
-         * This is the second entry point when we initialize the feature.
-         *
-         * The method adds feature-related variable to the passed header rows array.
-         *
-         * @param headerRowsData
-         */
-        service.initFeatureHeaderValues = function(headerRowsData, columnSelectorFeature){
-            if(columnSelectorFeature && columnSelectorFeature.isEnabled){
-                _.each(headerRowsData, function(item){
-                    item.columnSelectorFeature.isVisible = !item.columnSelectorFeature.isHidden;
-                });
-            }
-        };
-
-        /**
-         * Set the position of the panel. It's required to attach it to the outer container
-         * of the component because otherwise some parts of the panel can became partially or fully hidden
-         * (e.g.: when table has only one row to show)
-         */
-        service.positionElement = function(element){
-            var elementToPosition = element.parent().find('.mdt-column-chooser-button');
-            var elementPosition = elementToPosition.offset();
-            var rt = ($(window).width() - (elementPosition.left + elementToPosition.outerWidth()));
-
-            var targetMetrics = {
-                top: elementPosition.top + 55,
-                right: rt
-            };
-
-            element.css('position', 'absolute');
-            element.detach().appendTo('body');
-
-            element.css({
-                top: targetMetrics.top + 'px',
-                right: targetMetrics.right + 'px',
-                position:'absolute'
-            });
-        }
-    }
-
-    angular
-        .module('mdDataTable')
-        .service('ColumnSelectorFeature', ColumnSelectorFeature);
-}());
-(function(){
-    'use strict';
-
-    EditCellFeature.$inject = ['$mdDialog'];
-    function EditCellFeature($mdDialog){
-
-        var service = this;
-
-        service.addRequiredFunctions = function($scope, ctrl){
-
-            $scope.saveRow = function(rowData){
-                var rawRowData = ctrl.dataStorage.getSavedRowData(rowData);
-
-                $scope.saveRowCallback({row: rawRowData});
-            };
-
-            $scope.showEditDialog = function(ev, cellData, rowData){
-                var rect = ev.currentTarget.closest('td').getBoundingClientRect();
-                var position = {
-                    top: rect.top,
-                    left: rect.left
-                };
-
-                var ops = {
-                    controller: 'InlineEditModalCtrl',
-                    targetEvent: ev,
-                    clickOutsideToClose: true,
-                    escapeToClose: true,
-                    focusOnOpen: false,
-                    locals: {
-                        position: position,
-                        cellData: JSON.parse(JSON.stringify(cellData)),
-                        mdtTranslations: $scope.mdtTranslations
-                    }
-                };
-
-                if(cellData.attributes.editableField === 'smallEditDialog'){
-                    ops.templateUrl = '/main/templates/smallEditDialog.html';
-                }else{
-                    ops.templateUrl = '/main/templates/largeEditDialog.html';
-                }
-
-                var that = this;
-                $mdDialog.show(ops).then(function(cellValue){
-                    cellData.value = cellValue;
-
-                    that.saveRow(rowData);
-                });
-            };
-        }
-    }
-
-    angular
-        .module('mdDataTable')
-        .service('EditCellFeature', EditCellFeature);
-}());
-(function(){
-    'use strict';
-
     ColumnSortFeature.$inject = ['ColumnSortDirectionProvider'];
     function ColumnSortFeature(ColumnSortDirectionProvider) {
 
@@ -2056,6 +1901,161 @@
     angular
         .module('mdDataTable')
         .service('ColumnSortFeature', ColumnSortFeature);
+}());
+(function(){
+    'use strict';
+
+    function ColumnSelectorFeature() {
+
+        var service = this;
+
+        /**
+         * This is the first entry point when we initialize the feature.
+         *
+         * The method adds feature-related variable to the passed object.
+         *
+         * @param cellDataToStore
+         */
+        service.appendHeaderCellData = function(cellDataToStore, columnSelectorFeature, isColumnExcludedFromColumnSelector, hideColumnByDefault) {
+            if(!columnSelectorFeature.isEnabled){
+                return;
+            }
+
+            cellDataToStore.columnSelectorFeature = {};
+
+            if(isColumnExcludedFromColumnSelector){
+                cellDataToStore.columnSelectorFeature.isExcluded = true;
+            }else{
+                cellDataToStore.columnSelectorFeature.isExcluded = false;
+            }
+
+            if(hideColumnByDefault){
+                cellDataToStore.columnSelectorFeature.isHidden = true;
+            }else{
+                cellDataToStore.columnSelectorFeature.isHidden = false;
+            }
+        };
+
+        /**
+         * This is the first entry point when we initialize the feature.
+         *
+         * The method adds feature-related variable to the passed object.
+         *
+         * @param cellDataToStore
+         */
+        service.initFeature = function(scope, vm) {
+            //TODO: backward compatible when there is only a string input
+            scope.columnSelectorFeature = {};
+
+            if(scope.tableCard && scope.tableCard.columnSelector){
+                scope.columnSelectorFeature.isEnabled = true;
+            }else{
+                scope.columnSelectorFeature.isEnabled = false;
+            }
+
+            vm.columnSelectorFeature = scope.columnSelectorFeature;
+        };
+
+        /**
+         * This is the second entry point when we initialize the feature.
+         *
+         * The method adds feature-related variable to the passed header rows array.
+         *
+         * @param headerRowsData
+         */
+        service.initFeatureHeaderValues = function(headerRowsData, columnSelectorFeature){
+            if(columnSelectorFeature && columnSelectorFeature.isEnabled){
+                _.each(headerRowsData, function(item){
+                    item.columnSelectorFeature.isVisible = !item.columnSelectorFeature.isHidden;
+                });
+            }
+        };
+
+        /**
+         * Set the position of the panel. It's required to attach it to the outer container
+         * of the component because otherwise some parts of the panel can became partially or fully hidden
+         * (e.g.: when table has only one row to show)
+         */
+        service.positionElement = function(element){
+            var elementToPosition = element.parent().find('.mdt-column-chooser-button');
+            var elementPosition = elementToPosition.offset();
+            var rt = ($(window).width() - (elementPosition.left + elementToPosition.outerWidth()));
+
+            var targetMetrics = {
+                top: elementPosition.top + 55,
+                right: rt
+            };
+
+            element.css('position', 'absolute');
+            element.detach().appendTo('body');
+
+            element.css({
+                top: targetMetrics.top + 'px',
+                right: targetMetrics.right + 'px',
+                position:'absolute'
+            });
+        }
+    }
+
+    angular
+        .module('mdDataTable')
+        .service('ColumnSelectorFeature', ColumnSelectorFeature);
+}());
+(function(){
+    'use strict';
+
+    EditCellFeature.$inject = ['$mdDialog'];
+    function EditCellFeature($mdDialog){
+
+        var service = this;
+
+        service.addRequiredFunctions = function($scope, ctrl){
+
+            $scope.saveRow = function(rowData){
+                var rawRowData = ctrl.dataStorage.getSavedRowData(rowData);
+
+                $scope.saveRowCallback({row: rawRowData});
+            };
+
+            $scope.showEditDialog = function(ev, cellData, rowData){
+                var rect = ev.currentTarget.closest('td').getBoundingClientRect();
+                var position = {
+                    top: rect.top,
+                    left: rect.left
+                };
+
+                var ops = {
+                    controller: 'InlineEditModalCtrl',
+                    targetEvent: ev,
+                    clickOutsideToClose: true,
+                    escapeToClose: true,
+                    focusOnOpen: false,
+                    locals: {
+                        position: position,
+                        cellData: JSON.parse(JSON.stringify(cellData)),
+                        mdtTranslations: $scope.mdtTranslations
+                    }
+                };
+
+                if(cellData.attributes.editableField === 'smallEditDialog'){
+                    ops.templateUrl = '/main/templates/smallEditDialog.html';
+                }else{
+                    ops.templateUrl = '/main/templates/largeEditDialog.html';
+                }
+
+                var that = this;
+                $mdDialog.show(ops).then(function(cellValue){
+                    cellData.value = cellValue;
+
+                    that.saveRow(rowData);
+                });
+            };
+        }
+    }
+
+    angular
+        .module('mdDataTable')
+        .service('EditCellFeature', EditCellFeature);
 }());
 (function() {
     'use strict';
@@ -2271,6 +2271,47 @@
         .module('mdDataTable')
         .directive('mdtDropdownColumnFilter', mdtDropdownColumnFilterDirective);
 })();
+(function(){
+    'use strict';
+
+    mdtSortingIconsDirective.$inject = ['ColumnSortDirectionProvider'];
+    function mdtSortingIconsDirective(ColumnSortDirectionProvider){
+        return {
+            restrict: 'E',
+            templateUrl: '/main/templates/cells/generateSortingIcons.html',
+            scope: {
+                data: '=',
+                size: '@'
+            },
+            link: function($scope){
+                $scope.ColumnSortDirectionProvider = ColumnSortDirectionProvider;
+            }
+        };
+    }
+
+    angular
+        .module('mdDataTable')
+        .directive('mdtSortingIcons', mdtSortingIconsDirective);
+}());
+(function(){
+    'use strict';
+
+    /**
+     * @name ColumnSortDirectionProvider
+     * @returns possible values for different type of paginators
+     *
+     * @describe Representing the possible paginator types.
+     */
+    var ColumnSortDirectionProvider = {
+        ASC : 'asc',
+        DESC : 'desc'
+    };
+
+    angular
+        .module('mdDataTable')
+        .value('ColumnSortDirectionProvider', ColumnSortDirectionProvider);
+})();
+
 (function() {
     'use strict';
 
@@ -2391,44 +2432,4 @@
     angular
         .module('mdDataTable')
         .directive('mdtColumnSelector', mdtColumnSelectorDirective);
-})();
-(function(){
-    'use strict';
-
-    mdtSortingIconsDirective.$inject = ['ColumnSortDirectionProvider'];
-    function mdtSortingIconsDirective(ColumnSortDirectionProvider){
-        return {
-            restrict: 'E',
-            templateUrl: '/main/templates/cells/generateSortingIcons.html',
-            scope: {
-                data: '=',
-                size: '@'
-            },
-            link: function($scope){
-                $scope.ColumnSortDirectionProvider = ColumnSortDirectionProvider;
-            }
-        };
-    }
-
-    angular
-        .module('mdDataTable')
-        .directive('mdtSortingIcons', mdtSortingIconsDirective);
-}());
-(function(){
-    'use strict';
-
-    /**
-     * @name ColumnSortDirectionProvider
-     * @returns possible values for different type of paginators
-     *
-     * @describe Representing the possible paginator types.
-     */
-    var ColumnSortDirectionProvider = {
-        ASC : 'asc',
-        DESC : 'desc'
-    };
-
-    angular
-        .module('mdDataTable')
-        .value('ColumnSortDirectionProvider', ColumnSortDirectionProvider);
 })();
