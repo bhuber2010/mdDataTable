@@ -17,5 +17,13 @@
         <ng-md-icon icon="settings" size="24"></ng-md-icon>
     </md-button>
 
+    <!-- hideTableFeature -->
+    <md-button class="md-icon-button md-primary"
+               aria-label="Hide/show table"
+               ng-if="::tableCard.tableShowHide"
+               ng-click="hideShowTableClick()">
+        <ng-md-icon icon="keyboard_arrow_down" size="24"></ng-md-icon>
+    </md-button>
+
     <mdt-column-selector ng-if="columnSelectorFeature.isEnabled && columnSelectorFeature.isActive"></mdt-column-selector>
 </div>

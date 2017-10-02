@@ -11,6 +11,7 @@
             require: ['^mdtTable'],
             link: function($scope){
                 $scope.isTableCardEnabled = false;
+                $scope.hideTable = false
 
                 //TODO: move it to the feature file
                 $scope.handleColumnChooserButtonClick = function(){
@@ -18,6 +19,12 @@
                         $scope.columnSelectorFeature.isActive = !$scope.columnSelectorFeature.isActive
                     }
                 };
+
+                $scope.hideShowTableClick = function(){
+                  if ($scope.tableCard && $scope.tableCard.tableShowHide) {
+                    $scope.hideTable = !$scope.hideTable
+                  }
+                }
 
                 if($scope.tableCard && $scope.tableCard.visible !== false){
                     $scope.isTableCardEnabled = true;

@@ -6,7 +6,7 @@
     <mdt-alternate-headers ng-show="alternateHeaders && dataStorage.isAnyRowSelected()"></mdt-alternate-headers>
     <!-- alternate headers end -->
 
-    <md-content class="mdtTable" layout="column">
+    <md-content class="mdtTable" layout="column" ng-hide="hideTable">
         <!-- parsing transcluded content in order to be executed -->
         <div class="mdtTable-reader" style="display:none;"></div>
 
