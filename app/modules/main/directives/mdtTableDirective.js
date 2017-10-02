@@ -151,6 +151,7 @@
                     return $scope.rippleEffect ? $scope.rippleEffect : false;
                 };
 
+                $scope.hideTable = $scope.tableCard.startTableHidden
                 $scope.handleHideTable = function(){
                   $scope.hideTable = !$scope.hideTable
                 }
