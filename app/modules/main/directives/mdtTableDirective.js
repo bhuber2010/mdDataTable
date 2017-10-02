@@ -236,8 +236,8 @@
                   $scope.hideTable = !$scope.hideTable
                   if (!$scope.hideTable && $scope.tableCard.tableViewContainerSelector) {
                     var view = document.querySelector($scope.tableCard.tableViewContainerSelector)
-                    var mdtTable = element.find(".mdtTable")[0]
                     _.defer(function() {
+                      var mdtTable = element.find(".mdtTable")[0]
                       view.scrollTop = mdtTable.offsetHeight
                     })
                   }
