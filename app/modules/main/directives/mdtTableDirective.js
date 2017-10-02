@@ -151,6 +151,10 @@
                     return $scope.rippleEffect ? $scope.rippleEffect : false;
                 };
 
+                $scope.handleHideTable = function(){
+                  $scope.hideTable = !$scope.hideTable
+                }
+
                 _setDefaultTranslations();
                 _initTableStorage();
 

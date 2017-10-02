@@ -281,6 +281,10 @@
                     return $scope.rippleEffect ? $scope.rippleEffect : false;
                 };
 
+                $scope.handleHideTable = function(){
+                  $scope.hideTable = !$scope.hideTable
+                }
+
                 _setDefaultTranslations();
                 _initTableStorage();
 
@@ -857,6 +861,32 @@
 (function(){
     'use strict';
 
+    ColumnAlignmentHelper.$inject = ['ColumnOptionProvider'];
+    function ColumnAlignmentHelper(ColumnOptionProvider){
+        var service = this;
+        service.getColumnAlignClass = getColumnAlignClass;
+
+        function getColumnAlignClass(alignRule) {
+          switch (alignRule) {
+              case ColumnOptionProvider.ALIGN_RULE.ALIGN_RIGHT:
+                  return 'rightAlignedColumn';
+              case ColumnOptionProvider.ALIGN_RULE.ALIGN_CENTER:
+                  return 'centerAlignedColumn';
+              case ColumnOptionProvider.ALIGN_RULE.ALIGN_LEFT:
+              default:
+                  return 'leftAlignedColumn';
+          }
+        }
+    }
+
+    angular
+        .module('mdDataTable')
+        .service('ColumnAlignmentHelper', ColumnAlignmentHelper);
+}());
+
+(function(){
+    'use strict';
+
     PaginationFeature.$inject = ['mdtPaginationHelperFactory', 'mdtAjaxPaginationHelperFactory'];
     function PaginationFeature(mdtPaginationHelperFactory, mdtAjaxPaginationHelperFactory){
         var service = this;
@@ -942,32 +972,6 @@
         .module('mdDataTable')
         .service('SelectableRowsFeature', SelectableRowsFeatureFactory);
 }());
-(function(){
-    'use strict';
-
-    ColumnAlignmentHelper.$inject = ['ColumnOptionProvider'];
-    function ColumnAlignmentHelper(ColumnOptionProvider){
-        var service = this;
-        service.getColumnAlignClass = getColumnAlignClass;
-
-        function getColumnAlignClass(alignRule) {
-          switch (alignRule) {
-              case ColumnOptionProvider.ALIGN_RULE.ALIGN_RIGHT:
-                  return 'rightAlignedColumn';
-              case ColumnOptionProvider.ALIGN_RULE.ALIGN_CENTER:
-                  return 'centerAlignedColumn';
-              case ColumnOptionProvider.ALIGN_RULE.ALIGN_LEFT:
-              default:
-                  return 'leftAlignedColumn';
-          }
-        }
-    }
-
-    angular
-        .module('mdDataTable')
-        .service('ColumnAlignmentHelper', ColumnAlignmentHelper);
-}());
-
 (function(){
     'use strict';
 
@@ -1534,7 +1538,7 @@
             require: ['^mdtTable'],
             link: function($scope){
                 $scope.isTableCardEnabled = false;
-                $scope.hideTable = false
+                $scope.hideTable = $scope.tableCard && $scope.tableCard.tableShowHide
 
                 //TODO: move it to the feature file
                 $scope.handleColumnChooserButtonClick = function(){
@@ -1545,7 +1549,7 @@
 
                 $scope.hideShowTableClick = function(){
                   if ($scope.tableCard && $scope.tableCard.tableShowHide) {
-                    $scope.hideTable = !$scope.hideTable
+                    $scope.handleHideTable()
                   }
                 }
 
