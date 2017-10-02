@@ -151,11 +151,6 @@
                     return $scope.rippleEffect ? $scope.rippleEffect : false;
                 };
 
-                $scope.hideTable = $scope.tableCard.startTableHidden
-                $scope.handleHideTable = function(){
-                  $scope.hideTable = !$scope.hideTable
-                }
-
                 _setDefaultTranslations();
                 _initTableStorage();
 
@@ -235,6 +230,18 @@
 
                 PaginationFeature.startFeature(ctrl);
                 ColumnSelectorFeature.initFeatureHeaderValues($scope.dataStorage.header, ctrl.columnSelectorFeature);
+
+                $scope.hideTable = $scope.tableCard.startTableHidden
+                $scope.handleHideTable = function(){
+                  $scope.hideTable = !$scope.hideTable
+                  if (!$scope.hideTable && $scope.tableCard.tableViewContainerSelector) {
+                    var view = document.querySelector($scope.tableCard.tableViewContainerSelector)
+                    var mdtTable = element.find(".mdtTable")[0]
+                    _.defer(function() {
+                      view.scrollTop = mdtTable.offsetHeight
+                    })
+                  }
+                }
 
                 function _injectContentIntoTemplate(){
                     transclude(function (clone) {
