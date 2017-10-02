@@ -366,10 +366,10 @@
                   $scope.hideTable = !$scope.hideTable
                   if (!$scope.hideTable && $scope.tableCard.tableViewContainerSelector) {
                     var view = document.querySelector($scope.tableCard.tableViewContainerSelector)
-                    _.defer(function() {
+                    _.delay(function() {
                       var mdtTable = element.find(".mdtTable")[0]
                       view.scrollTop = mdtTable.offsetHeight
-                    })
+                    },2000)
                   }
                 }
 
