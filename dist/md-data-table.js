@@ -369,7 +369,7 @@
                     _.delay(function() {
                       var mdtTable = element.find(".mdtTable")[0]
                       view.scrollTop = mdtTable.offsetHeight
-                    },2000)
+                    },500)
                   }
                 }
 
