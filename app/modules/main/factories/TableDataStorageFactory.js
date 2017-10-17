@@ -48,6 +48,21 @@
             return this.storage[index].optionList;
         };
 
+        TableDataStorageService.prototype.updateAllRowsOptionList = function(optionsToUpdate){
+          _.each(this.storage, function(row){
+            _.assign(row.optionList, optionsToUpdate)
+          })
+        };
+
+        TableDataStorageService.prototype.updateRowsOptionList = function(matchedRows, optionsToUpdate){
+          var storage = this.storage
+          _.each(matchedRows, function(row){
+            var foundRow = _.find(storage, {rowId: row.rowId})
+            _.assign(foundRow.optionList, optionsToUpdate)
+          })
+
+        };
+
         TableDataStorageService.prototype.setAllRowsSelected = function(isSelected, isPaginationEnabled){
             if(typeof isSelected === 'undefined'){
                 $log.error('`isSelected` parameter is required');

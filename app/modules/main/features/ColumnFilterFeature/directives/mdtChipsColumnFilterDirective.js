@@ -32,6 +32,21 @@
                     element.remove();
                 });
 
+                //populating choosable values
+                $scope.runFilterQuery = function(searchText){
+                  return $scope.headerRowData.columnFilter.valuesProviderCallback.call(this, $scope.headerRowData.columnFilter.columnIndex)
+                    .then(function(possibleValues){
+                      var results = _.filter(possibleValues, function(value){
+                        if (typeof searchText === 'number') {
+                          return value.indexOf(searchText) !== -1;
+                        } else {
+                          return value.toLowerCase().indexOf(searchText.toLowerCase()) !== -1;
+                        }
+                      });
+                      return results;
+                    });
+                }
+
                 //focus input immediately
                 $timeout(function(){
                     element.find('input').focus();
@@ -39,7 +54,7 @@
 
                 function transformChip(chip) {
                     if($scope.headerRowData.columnFilter.valuesTransformerCallback){
-                        return $scope.headerRowData.columnFilter.valuesTransformerCallback(chip);
+                        return $scope.headerRowData.columnFilter.valuesTransformerCallback.call(this, chip, $scope.headerRowData.columnFilter.columnIndex);
                     }
 
                     return chip;

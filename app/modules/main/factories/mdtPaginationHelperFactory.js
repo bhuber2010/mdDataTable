@@ -11,9 +11,10 @@
             if(paginationSetting &&
                 paginationSetting.hasOwnProperty('rowsPerPageValues') &&
                 paginationSetting.rowsPerPageValues.length > 0){
-
+                this.paginationOn = true
                 this.rowsPerPageValues = paginationSetting.rowsPerPageValues;
             }else{
+                this.paginationOn = false
                 this.rowsPerPageValues = [10,20,30,50,100];
             }
 
@@ -23,14 +24,16 @@
 
         mdtPaginationHelper.prototype.calculateVisibleRows = function (){
             var that = this;
+            if (this.paginationOn) {
+              _.each(this.dataStorage.storage, function (rowData, index) {
+                  if(index >= that.getStartRowIndex() && index <= that.getEndRowIndex()) {
+                      rowData.optionList.visible = true;
+                  } else {
+                      rowData.optionList.visible = false;
+                  }
+              });
+            }
 
-            _.each(this.dataStorage.storage, function (rowData, index) {
-                if(index >= that.getStartRowIndex() && index <= that.getEndRowIndex()) {
-                    rowData.optionList.visible = true;
-                } else {
-                    rowData.optionList.visible = false;
-                }
-            });
         };
 
         mdtPaginationHelper.prototype.getStartRowIndex = function(){
@@ -53,7 +56,6 @@
 
         mdtPaginationHelper.prototype.getRows = function(){
             this.calculateVisibleRows();
-
             return this.dataStorage.storage;
         };
 

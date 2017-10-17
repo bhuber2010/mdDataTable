@@ -1,7 +1,7 @@
 (function(){
     'use strict';
 
-    function ColumnFilterFeature(ColumnSortFeature, PaginatorTypeProvider){
+    function ColumnFilterFeature(ColumnSortFeature, PaginatorTypeProvider, $q){
 
         var service = this;
 
@@ -16,14 +16,22 @@
          */
         service.appendHeaderCellData = function($scope, cellDataToStore, dataStorage){
             cellDataToStore.columnFilter = {};
-
             if($scope.columnFilter && $scope.columnFilter.valuesProviderCallback){
                 cellDataToStore.columnFilter.isEnabled = true;
                 cellDataToStore.columnFilter.filtersApplied = [];
-                cellDataToStore.columnFilter.valuesProviderCallback = $scope.columnFilter.valuesProviderCallback;
-                cellDataToStore.columnFilter.valuesTransformerCallback = $scope.columnFilter.valuesTransformerCallback;
+                cellDataToStore.columnFilter.valuesProviderCallback = _.isFunction($scope.columnFilter.valuesProviderCallback) ?
+                  $scope.columnFilter.valuesProviderCallback : function(columnIndex) {
+                    dataStorage.header[columnIndex].columnFilter.groupedRowsByColVal = _.groupBy(dataStorage.storage, function(row) {
+                      return row.data[columnIndex].value
+                    })
+                    var keys = _.keys(dataStorage.header[columnIndex].columnFilter.groupedRowsByColVal)
+                    return $q.resolve(keys)
+                  };
+                cellDataToStore.columnFilter.valuesTransformerCallback = _.isFunction($scope.columnFilter.valuesTransformerCallback) ?
+                  $scope.columnFilter.valuesTransformerCallback : function(value, columnIndex) {
+                    return value
+                  }
                 cellDataToStore.columnFilter.placeholderText = $scope.columnFilter.placeholderText;
-                cellDataToStore.columnFilter.type = $scope.columnFilter.filterType || 'chips';
                 cellDataToStore.columnFilter.type = $scope.columnFilter.filterType || 'chips';
                 cellDataToStore.columnFilter.isActive = false;
 
@@ -79,7 +87,17 @@
                 if(paginator.paginatorType === PaginatorTypeProvider.AJAX){
                     paginator.getFirstPage();
                 }else{
-                    // no support for non-ajax yet
+                    ColumnSortFeature.sortWithColumnFilterNoAJAX(headerData, dataStorage)
+                    var matchedRows = []
+                    _.each(params.selectedItems, function(groupedByValue) {
+                      matchedRows = _.concat(matchedRows, headerData.columnFilter.groupedRowsByColVal[groupedByValue])
+                    })
+                    if (params.selectedItems.length && params.selectedItems.length !== _.keys(headerData.columnFilter.groupedRowsByColVal).length) {
+                      dataStorage.updateAllRowsOptionList({visible: false})
+                      dataStorage.updateRowsOptionList(matchedRows, {visible: true})
+                    } else {
+                      dataStorage.updateAllRowsOptionList({visible: true})
+                    }
                 }
             }
         };
@@ -89,11 +107,11 @@
          * @param $scope
          * @param headerRowData
          */
-        service.generatedHeaderCellClickHandler = function($scope, headerRowData, element){
+        service.generatedHeaderCellClickHandler = function($scope, headerRowData, element, attrs){
             if(!headerRowData.columnFilter.isEnabled) {
                 return;
             }
-
+            headerRowData.columnFilter.columnIndex = attrs.index
             headerRowData.columnFilter.setColumnActive(!headerRowData.columnFilter.isActive);
         };
 

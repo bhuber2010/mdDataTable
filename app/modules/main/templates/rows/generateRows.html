@@ -2,7 +2,7 @@
     ng-repeat="rowData in mdtPaginationHelper.getRows() track by $index"
     ng-click="performRowClick($index)"
     ng-class="{'selectedRow': rowData.optionList.selected, '{{rowData.optionList.className}}': rowData.optionList.className }"
-    ng-show="(isPaginationEnabled() === false || rowData.optionList.visible === true) && rowData.optionList.deleted === false">
+    ng-show="rowData.optionList.visible === true && rowData.optionList.deleted === false">
 
     <td class="checkboxCell" ng-show="selectableRows"
         ng-include="'/main/templates/cells/generateCheckboxCell.html'"></td>

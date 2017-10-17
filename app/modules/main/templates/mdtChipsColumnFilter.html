@@ -12,7 +12,7 @@
                     <md-autocomplete md-delay="300"
                                      md-autofocus="true"
                                      md-search-text="searchText"
-                                     md-items="item in headerRowData.columnFilter.valuesProviderCallback(searchText)"
+                                     md-items="item in runFilterQuery(searchText)"
                                      md-item-text="transformChip(item)"
                                      placeholder="{{placeholderText}}">
 

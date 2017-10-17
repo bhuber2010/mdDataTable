@@ -82,6 +82,16 @@
         };
 
         /**
+         * Performs sort when the column also has column filters enabled BUT NOT Ajax pagination
+         * @param headerRowData
+         * @param dataStorage
+         */
+        service.sortWithColumnFilterNoAJAX = function(headerRowData, dataStorage){
+          headerRowData.columnSort.columnIndex = headerRowData.columnFilter.columnIndex
+          sortByColumn(headerRowData, dataStorage);
+        }
+
+        /**
          * Add the appropriate values to the paginator callback
          * @param dataStorage
          * @param callbackArguments
