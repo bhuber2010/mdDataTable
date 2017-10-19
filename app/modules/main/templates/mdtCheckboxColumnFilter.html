@@ -6,7 +6,7 @@
             </div>
 
             <div layout="row" layout-align="start center" class="selectall_clearall p-l-md p-t-md p-b-sm">
-                <a href="#" ng-click="selectAll($event)" ng-class="{'disabled' : selectedItems.length === selectableItems.length}">Select all</a> <span>-</span> <a href="#" ng-class="{'disabled' : selectedItems.length === 0}" ng-click="clearAll($event)">Clear</a>
+                <a href="#" ng-click="selectAll($event)" ng-class="{'disabled' : selectedItems.length === selectableItems.length}">Select all</a> <span>-</span> <a href="#" ng-class="{'disabled' : selectedItems.length === 0}" ng-click="clearAll($event)">Clear filter</a>
 
                 <div class="selected_items p-r-md" flex ng-if="selectedItems.length">{{selectedItems.length}} Selected</div>
             </div>

@@ -88,12 +88,7 @@
                 params.event.stopPropagation();
                 console.log("params.selectedItems:", params.selectedItems);
                 headerData.columnFilter.setColumnFilterShown(false);
-
                 headerData.columnFilter.filtersApplied = params.selectedItems;
-                headerData.columnFilter.filtersAppliedRows = {}
-                _.each(params.selectedItems, function(rowGroupValue) {
-                  headerData.columnFilter.filtersAppliedRows[rowGroupValue] = headerData.columnFilter.groupedRowsByColVal[rowGroupValue]
-                })
                 dataStorage.updateColumnFiltersComparator(headerData.columnIndex, params.selectedItems)
 
                 //applying changes to sort feature
@@ -107,9 +102,16 @@
                     console.log("dataStorage:", dataStorage);
                     ColumnSortFeature.sortWithColumnFilterNoAJAX(headerData, dataStorage)
                     var matchedRows = []
-                    _.each(params.selectedItems, function(groupedByValue) {
-                      if (headerData.columnFilter.groupedRowsByColVal[groupedByValue]) {
-                        matchedRows = _.concat(matchedRows, headerData.columnFilter.groupedRowsByColVal[groupedByValue])
+                    headerData.columnFilter.filtersAppliedRows = {}
+                    _.each(params.selectedItems, function(item) {
+                      if (headerData.columnFilter.groupedRowsByColVal[item]) {
+                        matchedRows = _.concat(matchedRows, headerData.columnFilter.groupedRowsByColVal[item])
+                        headerData.columnFilter.filtersAppliedRows[item] = headerData.columnFilter.groupedRowsByColVal[item]
+                      } else {
+                        var matchedValueRows = _.reduce(headerData.columnFilter.groupedRowsByColVal, function(matchesArray,rowSet, key) {
+                          return _.includes(key, item) ? matchesArray.concat(rowSet) : matchesArray
+                        }, [])
+                        matchedRows = _.concat(matchedRows, matchedValueRows)
                       }
                     })
                     headerData.columnFilter.matchedRows = matchedRows
@@ -155,7 +157,13 @@
               _.filter($scope.dataStorage.storage, function(row) {
                 var result = !_.some($scope.dataStorage.columnFiltersComparator, function(selectedValuesArray, columnIndexOfFilter) {
                   if (selectedValuesArray.length && (attrs.index != columnIndexOfFilter)) {
-                    return !_.includes(selectedValuesArray, row.data[columnIndexOfFilter].value)
+                    var removeRow = !_.includes(selectedValuesArray, row.data[columnIndexOfFilter].value)
+                    if (removeRow) {
+                      removeRow = !_.some(selectedValuesArray, function(selectedValue) {
+                        return _.includes(row.data[columnIndexOfFilter].value, selectedValue)
+                      })
+                    }
+                    return removeRow
                   } else {
                     return false
                   }

@@ -7,10 +7,11 @@
 
             <div class="p-md filter__scroll">
                 <md-chips ng-model="selectedItems"
-                          md-require-match="true">
+                          md-require-match="false">
 
                     <md-autocomplete md-delay="300"
                                      md-autofocus="true"
+                                     md-select-on-match="true"
                                      md-search-text="searchText"
                                      md-items="item in runFilterQuery(searchText)"
                                      md-item-text="transformChip(item)"
