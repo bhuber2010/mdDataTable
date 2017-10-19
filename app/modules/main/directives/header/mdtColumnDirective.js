@@ -74,14 +74,14 @@
             require: ['^mdtTable'],
             link: function ($scope, element, attrs, ctrl, transclude) {
                 var mdtTableCtrl = ctrl[0];
-
                 transclude(function (clone) {
                     // directive creates an isolate scope so use parent scope to resolve variables.
                     var cellValue = $interpolate(clone[0].data)($scope.$parent);
                     var cellDataToStore = {
                         alignRule: $scope.alignRule,
                         columnDefinition: $scope.columnDefinition,
-                        columnName: cellValue
+                        columnName: cellValue,
+                        columnIndex: mdtTableCtrl.dataStorage.header.length
                     };
 
                     ColumnFilterFeature.appendHeaderCellData($scope, cellDataToStore, mdtTableCtrl.dataStorage);

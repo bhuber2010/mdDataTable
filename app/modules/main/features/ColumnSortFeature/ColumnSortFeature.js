@@ -87,7 +87,6 @@
          * @param dataStorage
          */
         service.sortWithColumnFilterNoAJAX = function(headerRowData, dataStorage){
-          headerRowData.columnSort.columnIndex = headerRowData.columnFilter.columnIndex
           sortByColumn(headerRowData, dataStorage);
         }
 
@@ -155,7 +154,7 @@
 
         function sortByColumn(headerRowData, dataStorage){
             var sortFunction;
-            var index = headerRowData.columnSort.columnIndex;
+            var index = headerRowData.columnIndex;
 
             if (typeof headerRowData.columnSort.comparator === 'function') {
                 sortFunction = function(a, b) {

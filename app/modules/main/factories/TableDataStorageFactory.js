@@ -7,6 +7,7 @@
             this.storage = [];
             this.header = [];
             this.customCells = {};
+            this.columnFiltersComparator = {};
         }
 
         TableDataStorageService.prototype.addHeaderCellData = function(ops){
@@ -61,6 +62,10 @@
             _.assign(foundRow.optionList, optionsToUpdate)
           })
 
+        };
+
+        TableDataStorageService.prototype.updateColumnFiltersComparator = function(colIndex, values) {
+          this.columnFiltersComparator[colIndex] = values
         };
 
         TableDataStorageService.prototype.setAllRowsSelected = function(isSelected, isPaginationEnabled){

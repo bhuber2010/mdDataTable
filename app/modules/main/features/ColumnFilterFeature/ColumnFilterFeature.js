@@ -19,32 +19,40 @@
             if($scope.columnFilter && $scope.columnFilter.valuesProviderCallback){
                 cellDataToStore.columnFilter.isEnabled = true;
                 cellDataToStore.columnFilter.filtersApplied = [];
+
                 cellDataToStore.columnFilter.valuesProviderCallback = _.isFunction($scope.columnFilter.valuesProviderCallback) ?
                   $scope.columnFilter.valuesProviderCallback : function(columnIndex) {
-                    dataStorage.header[columnIndex].columnFilter.groupedRowsByColVal = _.groupBy(dataStorage.storage, function(row) {
+                    console.log("columnIndex:", columnIndex);
+                    console.log("columnFiltersComparator:", dataStorage.columnFiltersComparator);
+                    console.log("rowsToConsider:", cellDataToStore.columnFilter.rowsToConsider);
+
+                    cellDataToStore.columnFilter.groupedRowsByColVal = _.groupBy(cellDataToStore.columnFilter.rowsToConsider, function(row) {
                       return row.data[columnIndex].value
                     })
-                    var keys = _.keys(dataStorage.header[columnIndex].columnFilter.groupedRowsByColVal)
+                    var keys = _.keys(cellDataToStore.columnFilter.groupedRowsByColVal)
+                    cellDataToStore.columnFilter.selectableRowValues = keys
                     return $q.resolve(keys)
                   };
+
                 cellDataToStore.columnFilter.valuesTransformerCallback = _.isFunction($scope.columnFilter.valuesTransformerCallback) ?
                   $scope.columnFilter.valuesTransformerCallback : function(value, columnIndex) {
                     return value
                   }
+
                 cellDataToStore.columnFilter.placeholderText = $scope.columnFilter.placeholderText;
                 cellDataToStore.columnFilter.type = $scope.columnFilter.filterType || 'chips';
-                cellDataToStore.columnFilter.isActive = false;
+                cellDataToStore.columnFilter.isActive = cellDataToStore.columnFilter.isActive || false
+                cellDataToStore.columnFilter.isFilterBoxShown = true;
 
-                cellDataToStore.columnFilter.setColumnActive = function(bool){
-                    //first we disable every column filter if any is active
+                cellDataToStore.columnFilter.setColumnFilterShown = function(bool){
+                    //first we hide every column filter if any are active
                     _.each(dataStorage.header, function(headerData){
                         if(headerData.columnFilter.isEnabled){
-                            headerData.columnFilter.isActive = false;
+                            headerData.columnFilter.isFilterBoxShown = false;
                         }
                     });
-
                     //then we activate ours
-                    cellDataToStore.columnFilter.isActive = bool ? true : false;
+                    cellDataToStore.columnFilter.isFilterBoxShown = bool ? true : false;
                 }
             }else{
                 cellDataToStore.columnFilter.isEnabled = false;
@@ -64,6 +72,8 @@
                 return;
             }
 
+            headerData.columnFilter.isFilterBoxShown = false;
+
             $scope.columnFilterFeature = {};
 
             $scope.columnFilterFeature.cancelFilterDialog = function(event){
@@ -71,15 +81,20 @@
                     event.stopPropagation();
                 }
 
-                headerData.columnFilter.setColumnActive(false);
+                headerData.columnFilter.setColumnFilterShown(false);
             };
 
             $scope.columnFilterFeature.confirmFilterDialog = function(params){
                 params.event.stopPropagation();
-
-                headerData.columnFilter.setColumnActive(false);
+                console.log("params.selectedItems:", params.selectedItems);
+                headerData.columnFilter.setColumnFilterShown(false);
 
                 headerData.columnFilter.filtersApplied = params.selectedItems;
+                headerData.columnFilter.filtersAppliedRows = {}
+                _.each(params.selectedItems, function(rowGroupValue) {
+                  headerData.columnFilter.filtersAppliedRows[rowGroupValue] = headerData.columnFilter.groupedRowsByColVal[rowGroupValue]
+                })
+                dataStorage.updateColumnFiltersComparator(headerData.columnIndex, params.selectedItems)
 
                 //applying changes to sort feature
                 ColumnSortFeature.setHeaderSort(headerData, params.sortingData, dataStorage);
@@ -87,15 +102,30 @@
                 if(paginator.paginatorType === PaginatorTypeProvider.AJAX){
                     paginator.getFirstPage();
                 }else{
+                    console.log("params:", params);
+                    console.log("headerData:", headerData);
+                    console.log("dataStorage:", dataStorage);
                     ColumnSortFeature.sortWithColumnFilterNoAJAX(headerData, dataStorage)
                     var matchedRows = []
                     _.each(params.selectedItems, function(groupedByValue) {
-                      matchedRows = _.concat(matchedRows, headerData.columnFilter.groupedRowsByColVal[groupedByValue])
+                      if (headerData.columnFilter.groupedRowsByColVal[groupedByValue]) {
+                        matchedRows = _.concat(matchedRows, headerData.columnFilter.groupedRowsByColVal[groupedByValue])
+                      }
                     })
-                    if (params.selectedItems.length && params.selectedItems.length !== _.keys(headerData.columnFilter.groupedRowsByColVal).length) {
+                    headerData.columnFilter.matchedRows = matchedRows
+                    console.log("matchedRows:", matchedRows);
+                    console.log("otherActiveFilterColumns:", headerData.columnFilter.otherActiveFilterColumns);
+                    var allItemsSelected = params.selectedItems.length == _.keys(headerData.columnFilter.groupedRowsByColVal).length
+                    if (params.selectedItems.length && !allItemsSelected) {
+                      headerData.columnFilter.isActive = true;
                       dataStorage.updateAllRowsOptionList({visible: false})
                       dataStorage.updateRowsOptionList(matchedRows, {visible: true})
+                    } else if (headerData.columnFilter.otherActiveFilterColumns.length && (!params.selectedItems.length || allItemsSelected)) {
+                      console.log("OTHER ACTIVE FILTERS");
+                      headerData.columnFilter.isActive = allItemsSelected
+                      dataStorage.updateRowsOptionList(headerData.columnFilter.rowsToConsider, {visible: true})
                     } else {
+                      headerData.columnFilter.isActive = false;
                       dataStorage.updateAllRowsOptionList({visible: true})
                     }
                 }
@@ -111,8 +141,31 @@
             if(!headerRowData.columnFilter.isEnabled) {
                 return;
             }
-            headerRowData.columnFilter.columnIndex = attrs.index
-            headerRowData.columnFilter.setColumnActive(!headerRowData.columnFilter.isActive);
+
+            headerRowData.columnFilter.otherActiveFilterColumns = []
+            _.each($scope.dataStorage.header, function(colHeader, i) {
+              if (colHeader.columnFilter.isActive && (colHeader.columnIndex != attrs.index)) {
+                headerRowData.columnFilter.otherActiveFilterColumns.push(i)
+              }
+            })
+            console.log("otherActiveFilterColumns", headerRowData.columnFilter.otherActiveFilterColumns);
+
+            $scope.dataStorage.header[attrs.index].columnFilter.rowsToConsider =
+              headerRowData.columnFilter.otherActiveFilterColumns.length ?
+              _.filter($scope.dataStorage.storage, function(row) {
+                var result = !_.some($scope.dataStorage.columnFiltersComparator, function(selectedValuesArray, columnIndexOfFilter) {
+                  if (selectedValuesArray.length && (attrs.index != columnIndexOfFilter)) {
+                    return !_.includes(selectedValuesArray, row.data[columnIndexOfFilter].value)
+                  } else {
+                    return false
+                  }
+                })
+                return result
+              }) : $scope.dataStorage.storage
+
+            console.log("rowsToConsider:", $scope.dataStorage.header[attrs.index].columnFilter.rowsToConsider);
+
+            headerRowData.columnFilter.setColumnFilterShown(!headerRowData.columnFilter.isFilterBoxShown);
         };
 
         /**
@@ -144,16 +197,18 @@
                 && dataStorage.header[index].columnFilter.isEnabled
                 && dataStorage.header[index].columnFilter.filtersApplied.length){
 
-                dataStorage.header[index].columnFilter.filtersApplied = [];
-
-                return true;
+                  dataStorage.header[index].columnFilter.isActive = false;
+                  dataStorage.header[index].columnFilter.filtersApplied = [];
+                  dataStorage.header[index].columnFilter.filtersAppliedRows = {}
+                  dataStorage.header[index].columnFilter.matchedRows = []
+                  return true;
             }
 
             return false;
         };
 
         /**
-         * Set the position of the column filter panel. It's required to attach it to the outer container 
+         * Set the position of the column filter panel. It's required to attach it to the outer container
          * of the component because otherwise some parts of the panel can became partially or fully hidden
          * (e.g.: when table has only one row to show)
          */
@@ -164,13 +219,13 @@
                 top: elementPosition.top + 60,
                 left: elementPosition.left
             };
-            
+
             element.css('position', 'absolute');
             element.detach().appendTo('body');
 
             element.css({
-                top: targetMetrics.top + 'px', 
-                left: targetMetrics.left + 'px', 
+                top: targetMetrics.top + 'px',
+                left: targetMetrics.left + 'px',
                 position:'absolute'
             });
         }

@@ -1,13 +1,13 @@
 <div class="p-r no-outline column-header-content" ng-class="{'clickable': headerRowData.columnSort.isEnabled}" ng-click="columnClickHandler()">
     <mdt-chips-column-filter
-        ng-if="headerRowData.columnFilter.isActive && headerRowData.columnFilter.type === 'chips'"
+        ng-if="headerRowData.columnFilter.isFilterBoxShown && headerRowData.columnFilter.type === 'chips'"
         confirm-callback="columnFilterFeature.confirmFilterDialog"
         cancel-callback="columnFilterFeature.cancelFilterDialog(event)"
         header-row-data="headerRowData">
     </mdt-chips-column-filter>
 
     <mdt-dropdown-column-filter
-        ng-if="headerRowData.columnFilter.isActive && headerRowData.columnFilter.type === 'dropdown'"
+        ng-if="headerRowData.columnFilter.isFilterBoxShown && headerRowData.columnFilter.type === 'dropdown'"
         confirm-callback="columnFilterFeature.confirmFilterDialog"
         cancel-callback="columnFilterFeature.cancelFilterDialog(event)"
         header-row-data="headerRowData">
@@ -15,7 +15,7 @@
 
 
     <mdt-checkbox-column-filter
-        ng-if="headerRowData.columnFilter.isActive && headerRowData.columnFilter.type === 'checkbox'"
+        ng-if="headerRowData.columnFilter.isFilterBoxShown && headerRowData.columnFilter.type === 'checkbox'"
         confirm-callback="columnFilterFeature.confirmFilterDialog"
         cancel-callback="columnFilterFeature.cancelFilterDialog(event)"
         header-row-data="headerRowData">

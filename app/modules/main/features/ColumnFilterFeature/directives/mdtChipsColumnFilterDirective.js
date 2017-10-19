@@ -34,7 +34,7 @@
 
                 //populating choosable values
                 $scope.runFilterQuery = function(searchText){
-                  return $scope.headerRowData.columnFilter.valuesProviderCallback.call(this, $scope.headerRowData.columnFilter.columnIndex)
+                  return $scope.headerRowData.columnFilter.valuesProviderCallback.call(this, $scope.headerRowData.columnIndex)
                     .then(function(possibleValues){
                       var results = _.filter(possibleValues, function(value){
                         if (typeof searchText === 'number') {
@@ -54,7 +54,7 @@
 
                 function transformChip(chip) {
                     if($scope.headerRowData.columnFilter.valuesTransformerCallback){
-                        return $scope.headerRowData.columnFilter.valuesTransformerCallback.call(this, chip, $scope.headerRowData.columnFilter.columnIndex);
+                        return $scope.headerRowData.columnFilter.valuesTransformerCallback.call(this, chip, $scope.headerRowData.columnIndex);
                     }
 
                     return chip;

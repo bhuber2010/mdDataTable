@@ -31,8 +31,9 @@
                 });
 
                 //populating choosable values
-                $scope.headerRowData.columnFilter.valuesProviderCallback.call(this, $scope.headerRowData.columnFilter.columnIndex).then(function(values){
+                $scope.headerRowData.columnFilter.valuesProviderCallback.call(this, $scope.headerRowData.columnIndex).then(function(values){
                     if(values){
+                        console.log("selectableItems:", values);
                         $scope.selectableItems = values
                     }
                 });
@@ -72,7 +73,7 @@
 
                 function transformChip(chip) {
                     if($scope.headerRowData.columnFilter.valuesTransformerCallback){
-                        return $scope.headerRowData.columnFilter.valuesTransformerCallback.call(this, chip, $scope.headerRowData.columnFilter.columnIndex);
+                        return $scope.headerRowData.columnFilter.valuesTransformerCallback.call(this, chip, $scope.headerRowData.columnIndex);
                     }
 
                     return chip;
