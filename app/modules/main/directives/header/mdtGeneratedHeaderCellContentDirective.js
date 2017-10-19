@@ -17,8 +17,7 @@
                 };
 
                 $scope.isColumnFilterActive = function() {
-                  var filtersLength = $scope.headerRowData.columnFilter.filtersApplied.length
-                  return filtersLength && filtersLength !== _.keys($scope.headerRowData.columnFilter.groupedRowsByColVal).length
+                  return $scope.headerRowData.columnFilter.filtersApplied.length
                 }
             }
         };
