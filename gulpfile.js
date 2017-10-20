@@ -9,6 +9,7 @@ require('./gulp-tasks/templates');
 require('./gulp-tasks/lint');
 require('./gulp-tasks/test');
 require('./gulp-tasks/dist');
+require('./gulp-tasks/gulp-strip-debug');
 
 gulp.task('start development webserver', function() {
     connect.server({
@@ -35,8 +36,12 @@ gulp.task('test', function(next) {
     runSequence('unit', /*'integration', */next);
 });
 
-gulp.task('release', function(next) {
+gulp.task('test-release', function(next) {
     runSequence('build', 'dist', next);
+});
+
+gulp.task('release', function(next) {
+    runSequence('build', 'dist', 'stripDebug', next);
 });
 
 gulp.task('ngdocs', [], function () {
